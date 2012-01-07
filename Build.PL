@@ -33,8 +33,8 @@ my $build = Module::Build->new(
 $build->meta_add({
     resources => {
         X_prepan => {
-            module_url => 'http://prepan.org/module/xxxxx',
-            author_url => 'http://prepan.org/user/xxxxxxx',
+            module_url => 'http://prepan.org/module/3Yz7PYrBNM',
+            author_url => 'http://prepan.org/user/3XR97nG2Gi',
         },
     },
 });
