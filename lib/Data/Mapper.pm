@@ -135,6 +135,12 @@ PofEAA
   my $sth = $mapper->destroy(user => { name => $data->param('name') });
   $sth->rows; #=> 1
 
+=head1 WARNING
+
+B<This software is under the heavy development and considered ALPHA
+quality now. Things might be broken, not all features have been
+implemented, and APIs will be likely to change. YOU HAVE BEEN WARNED.>
+
 =head1 DESCRIPTION
 
 Data::Mapper is an implementation of Data Mapper Pattern described in
