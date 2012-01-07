@@ -61,3 +61,9 @@ mmm
 Kentaro
 Kuribayashi
 antipop
+ORM
+ORM-ish
+PofEAA
+datasource
+memcached
+versa
