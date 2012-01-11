@@ -260,15 +260,15 @@ default. You can define your own I<Data> object by inheriting
 I<Data::Mapper>.
 
   package My::Mapper::Data::User;
-  use parent qw(Data::Mapper::Data);
+  use parent qw(Data::Mapper::Data); #=> It's not necessarilly required as explained above
 
   package My::Mapper;
-  use parent qw(Data::Mapper); #=> It's not necessarilly required as explained above
+  use parent qw(Data::Mapper);
 
   package main;
   My::Mapper;
 
-  my $mapper->new(...);
+  my $mapper = My::Mapper->new(...);
   $mapper->find(user => ...) #=> Now returns data as a My::Mapper::Data::User
 
 I<Data::Mapper::Data>-based object has one might-be-useful methods:
