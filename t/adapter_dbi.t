@@ -29,12 +29,12 @@ subtest 'find' => sub {
     is_deeply $created, $found;
 };
 
-subtest 'all' => sub {
-    my $created1 = $adapter->create(test => { value => 'test all' });
-    my $created2 = $adapter->create(test => { value => 'test all' });
+subtest 'search' => sub {
+    my $created1 = $adapter->create(test => { value => 'test search' });
+    my $created2 = $adapter->create(test => { value => 'test search' });
 
-    my $data = $adapter->all(test => {
-        value => 'test all'
+    my $data = $adapter->search(test => {
+        value => 'test search'
     }, {
         order_by => 'id desc'
     });
@@ -63,13 +63,13 @@ subtest 'update' => sub {
     is $updated->{value}, 'test updated';
 };
 
-subtest 'destroy' => sub {
-    my $created = $adapter->create(test => { value => 'test destroy' });
+subtest 'delete' => sub {
+    my $created = $adapter->create(test => { value => 'test delete' });
 
     ok $created;
-    is $created->{value}, 'test destroy';
+    is $created->{value}, 'test delete';
 
-    my $ret = $adapter->destroy(test => { id => $created->{id} });
+    my $ret = $adapter->delete(test => { id => $created->{id} });
 
     ok $ret;
     isa_ok $ret, 'DBI::st';

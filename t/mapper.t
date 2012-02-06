@@ -37,12 +37,12 @@ subtest 'find' => sub {
     ok !$ret;
 };
 
-subtest 'all' => sub {
-    my $created1 = $mapper->create(test => { value => 'test all' });
-    my $created2 = $mapper->create(test => { value => 'test all' });
+subtest 'search' => sub {
+    my $created1 = $mapper->create(test => { value => 'test search' });
+    my $created2 = $mapper->create(test => { value => 'test search' });
 
-    my $data = $mapper->all(test => {
-        value => 'test all'
+    my $data = $mapper->search(test => {
+        value => 'test search'
     }, {
         order_by => 'id desc'
     });
@@ -77,20 +77,20 @@ subtest 'update' => sub {
     is $updated->param('value'), 'test updated';
 };
 
-subtest 'destroy' => sub {
-    my $data = $mapper->create(test => { value => 'test destroy' });
+subtest 'delete' => sub {
+    my $data = $mapper->create(test => { value => 'test delete' });
 
     ok $data;
 
-    my $ret = $mapper->destroy(test => { id => $data->{id} });
+    my $ret = $mapper->delete(test => { id => $data->{id} });
 
     ok $ret;
     isa_ok $ret, 'DBI::st';
     is     $ret->rows, 1;
 
-    my $destroyed = $mapper->find(test => { id => $data->{id} });
+    my $deleted = $mapper->find(test => { id => $data->{id} });
 
-    ok !$destroyed;
+    ok !$deleted;
 };
 
 subtest 'data_class' => sub {

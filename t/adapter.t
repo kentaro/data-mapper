@@ -20,7 +20,7 @@ subtest 'subclass' => sub {
     my $adapter = t::Data::Mapper::Adapter->new;
 
     like exception { $adapter->$_ }, qr/^$_\(\) method/
-        for qw(create find all update destroy);
+        for qw(create find search update delete schemata);
 };
 
 done_testing;

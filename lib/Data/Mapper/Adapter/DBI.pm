@@ -7,17 +7,20 @@ use Carp ();
 use SQL::Maker;
 use DBIx::Inspector;
 
+use Data::Mapper::Schema;
+
 sub create {
     my ($self, $table, $values) = @_;
     my ($sql, @binds) = $self->sql->insert($table, $values);
 
     $self->execute($sql, @binds);
 
-    my @primary_keys = $self->inspector->primary_key;
-    my $key = $primary_keys[0];
+    my $schema       = $self->schemata->{$table};
+    my $primary_keys = $schema->primary_keys;
+    my $key          = $primary_keys->[0];
 
-    if (scalar @primary_keys == 1 && !defined $values->{$key->name}) {
-        $values->{$key->name} = $self->last_insert_id($table);
+    if (scalar @$primary_keys == 1 && !defined $values->{$key}) {
+        $values->{$key} = $self->last_insert_id($table);
     }
 
     $values;
@@ -31,7 +34,7 @@ sub find {
     $sth->fetchrow_hashref;
 }
 
-sub all {
+sub search {
     my ($self, $table, $where, $options) = @_;
     my ($sql, @binds) = $self->select($table, $where, $options);
     my $sth = $self->execute($sql, @binds);
@@ -51,13 +54,32 @@ sub update {
     $self->execute($sql, @binds);
 }
 
-sub destroy {
+sub delete {
     my ($self, $table, $where) = @_;
     my ($sql, @binds) = $self->sql->delete($table, $where);
 
     $self->execute($sql, @binds);
 }
 
+sub schemata {
+    my $self = shift;
+
+    if (!defined $self->{schemata}) {
+        $self->{schemata} = {};
+
+        for my $table ($self->inspector->tables) {
+            $self->{schemata}{$table->name} = Data::Mapper::Schema->new({
+                table        => $table->name,
+                primary_keys => [ map { $_->name } $table->primary_key ],
+                columns      => [ map { $_->name } $table->columns     ],
+            });
+        }
+    }
+
+    $self->{schemata};
+}
+
+# private
 sub sql {
     my $self = shift;
 
@@ -112,6 +134,26 @@ sub last_insert_id {
     }
 
     $last_insert_id;
+}
+
+sub check_table {
+    my ($self, $table) = @_;
+    $self->schemata->{$table} or Carp::croak("no such table: $table");
+}
+
+{
+    no strict 'refs';
+    no warnings 'redefine';
+
+    for my $method (qw(create find search update delete)) {
+        my $original = \&$method;
+
+        *{__PACKAGE__."\::$method"} = sub {
+            my ($self, $table) = @_;
+            $self->check_table($table);
+            $original->(@_);
+        };
+    }
 }
 
 !!1;

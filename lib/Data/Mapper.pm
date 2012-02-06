@@ -28,12 +28,12 @@ sub find {
     $data && $self->map_data($name, $data);
 }
 
-sub all {
+sub search {
     my $self = shift;
     my $name = shift;
-    my $data = $self->adapter->all($name => @_);
+    my $data = $self->adapter->search($name => @_);
 
-    die 'results returned from all() method must be an ArrayRef'
+    die 'results returned from search() method must be an ArrayRef'
         if ref $data ne 'ARRAY';
 
     my @result;
@@ -49,11 +49,11 @@ sub update {
     $self->adapter->update($name => @_);
 }
 
-sub destroy  {
+sub delete  {
     my $self = shift;
     my $name = shift;
 
-    $self->adapter->destroy($name => @_);
+    $self->adapter->delete($name => @_);
 }
 
 sub adapter {
@@ -68,7 +68,6 @@ sub data_class {
 
     $DATA_CLASSES{$name} ||= do {
         my $data_class = join '::', (ref $self), 'Data', ucfirst lc $name;
-        warn $data_class;
 
         eval { Class::Load::load_class($data_class) };
         $data_class = 'Data::Mapper::Data' if $@;
@@ -87,6 +86,10 @@ sub map_data {
         $data = $data->as_serializable;
     }
 
+    my $schema = $self->adapter->schemata->{$name};
+    my $id     = join ';', (map { join '=', $_, $data->{$_} } @{$schema->primary_keys});
+
+    $data->{__OBJECT_ID__} = $id;
     $data_class->new($data);
 }
 
