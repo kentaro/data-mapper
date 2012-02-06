@@ -5,7 +5,12 @@ lib/Data/Mapper/Adapter.pm
 lib/Data/Mapper/Adapter/DBI.pm
 lib/Data/Mapper/Class.pm
 lib/Data/Mapper/Data.pm
+lib/Data/Mapper/Schema.pm
+LICENSE
 MANIFEST			This list of files
+META.json
+META.yml
+README
 t/adapter.t
 t/adapter_dbi.t
 t/compile.t
@@ -21,7 +26,3 @@ xt/03_pod.t
 xt/04_minimum_version.t
 xt/05_cpan_meta.t
 xt/06_meta_author.t
-README
-LICENSE
-META.yml
-META.json

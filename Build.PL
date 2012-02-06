@@ -30,12 +30,5 @@ my $build = Module::Build->new(
     create_readme  => 1,
     create_license => 1,
 );
-$build->meta_add({
-    resources => {
-        X_prepan => {
-            module_url => 'http://prepan.org/module/3Yz7PYrBNM',
-            author_url => 'http://prepan.org/user/3XR97nG2Gi',
-        },
-    },
-});
+
 $build->create_build_script();
