@@ -79,7 +79,8 @@ sub schemata {
     $self->{schemata};
 }
 
-# private
+### PRIVATE_METHODS ###
+
 sub sql {
     my $self = shift;
 

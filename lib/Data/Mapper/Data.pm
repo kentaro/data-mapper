@@ -5,6 +5,17 @@ use parent qw(Data::Mapper::Class);
 
 use Carp ();
 
+sub table {
+    my $self  = shift;
+    my $class = ref $self;
+
+    Carp::croak('this class should be inherited by subclass')
+        if $class eq __PACKAGE__;
+
+    my ($table) = ($class =~ /::([^:]+)$/);
+    lc $table;
+}
+
 sub param {
     my $self = shift;
     return keys %$self if !@_;
@@ -28,43 +39,43 @@ sub param {
     }
 }
 
-# my %CHANGES;
-# sub changed_keys {
-#     my ($self, $changed_keys) = @_;
-#     $CHANGES{$self + 0} ||= [];
-#     $CHANGES{$self + 0} = $changed_keys if defined $changed_keys;
-#     $CHANGES{$self + 0};
-# }
+my %CHANGES;
+sub changed_keys {
+    my ($self, $changed_keys) = @_;
+    $CHANGES{$self + 0} ||= [];
+    $CHANGES{$self + 0} = $changed_keys if defined $changed_keys;
+    $CHANGES{$self + 0};
+}
 
-# sub changes {
-#     my $self = shift;
-#     my $changes = {};
+sub changes {
+    my $self = shift;
+    my $changes = {};
 
-#     for my $key (@{$self->changed_keys}) {
-#         $changes->{$key} = $self->param($key);
-#     }
+    for my $key (@{$self->changed_keys}) {
+        $changes->{$key} = $self->param($key);
+    }
 
-#     $changes;
-# }
+    $changes;
+}
 
-# sub mark_as_changed {
-#     my ($self, $key) = @_;
-#     push @{$self->changed_keys}, $key;
-# }
+sub mark_as_changed {
+    my ($self, $key) = @_;
+    push @{$self->changed_keys}, $key;
+}
 
-# sub is_changed {
-#     my $self = shift;
-#     scalar @{$self->changed_keys} > 0;
-# }
+sub is_changed {
+    my $self = shift;
+    scalar @{$self->changed_keys} > 0;
+}
 
-# sub discard_changes {
-#     my $self = shift;
-#     $self->changed_keys([]);
-# }
+sub discard_changes {
+    my $self = shift;
+    $self->changed_keys([]);
+}
 
-# sub DESTROY {
-#     my $self = shift;
-#     $self->discard_changes;
-# }
+sub DESTROY {
+    my $self = shift;
+    $self->discard_changes;
+}
 
 !!1;

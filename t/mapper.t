@@ -30,7 +30,7 @@ subtest 'find' => sub {
     ok        $found;
     isa_ok    $found, 't::lib::Data::Mapper::Data::Test';
     is_deeply $created, $found;
-    ok        !$found->is_changed;
+    ok       !$found->is_changed;
 
     note 'when not found';
     my $ret = $mapper->find(test => { id => 'not found key' });
@@ -40,23 +40,22 @@ subtest 'find' => sub {
 subtest 'search' => sub {
     my $created1 = $mapper->create(test => { value => 'test search' });
     my $created2 = $mapper->create(test => { value => 'test search' });
-
-    my $data = $mapper->search(test => {
+    my $result  = $mapper->search(test => {
         value => 'test search'
     }, {
         order_by => 'id desc'
     });
 
-    ok $data;
-    is ref $data, 'ARRAY';
-    is scalar @$data, 2;
+    ok $result;
+    is ref $result, 'ARRAY';
+    is scalar @$result, 2;
 
-    for my $record (@$data) {
+    for my $record (@$result) {
         isa_ok $record, 't::lib::Data::Mapper::Data::Test';
         ok    !$record->is_changed;
     }
 
-    is_deeply $data, [$created2, $created1];
+    is_deeply $result, [$created2, $created1];
 };
 
 subtest 'update' => sub {
@@ -65,7 +64,7 @@ subtest 'update' => sub {
     is $data->param('value'), 'test update';
     $data->param(value => 'test updated');
 
-    my $ret = $mapper->update(test => $data->changes, { id => $data->{id} });
+    my $ret = $mapper->update($data);
 
     ok     $ret;
     isa_ok $ret, 'DBI::st';
@@ -82,23 +81,22 @@ subtest 'delete' => sub {
 
     ok $data;
 
-    my $ret = $mapper->delete(test => { id => $data->{id} });
+    my $ret = $mapper->delete($data);
 
     ok $ret;
     isa_ok $ret, 'DBI::st';
     is     $ret->rows, 1;
 
     my $deleted = $mapper->find(test => { id => $data->{id} });
-
     ok !$deleted;
 };
 
 subtest 'data_class' => sub {
-    my $class1 = $mapper->data_class('test');
-    my $class2 = $mapper->data_class('nothing');
+    my $class = $mapper->data_class('test');
 
-    is $class1, 't::lib::Data::Mapper::Data::Test';
-    is $class2, 'Data::Mapper::Data';
+    is $class, 't::lib::Data::Mapper::Data::Test';
+    like exception { $mapper->data_class('nothing') },
+       qr'^no such data class: t::lib::Data::Mapper::Data::Nothing for nothing';
 };
 
 subtest 'map_data' => sub {
@@ -127,6 +125,17 @@ subtest 'map_data' => sub {
         isa_ok $data, 't::lib::Data::Mapper::Data::Test';
         is     $data->param('foo'), 'test';
     }
+};
+
+subtest 'mapped_params' => sub {
+    my $data   = $mapper->create(test => { value => 'test mapped_params' });
+       $data->param(value => 'changed');
+    my $params = $mapper->mapped_params($data);
+
+    is_deeply $params, +{
+        set   => { value => 'changed'          },
+        where => { id    => $data->param('id') },
+    };
 };
 
 done_testing;

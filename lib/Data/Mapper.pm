@@ -43,17 +43,25 @@ sub search {
 }
 
 sub update {
-    my $self = shift;
-    my $name = shift;
+    my ($self, $data) = @_;
+    my $result;
 
-    $self->adapter->update($name => @_);
+    if ($data->is_changed) {
+        my $params = $self->mapped_params($data);
+
+        $result = $self->adapter->update(
+            $data->table => $params->{set} => $params->{where}
+        );
+    }
+
+    $result;
 }
 
 sub delete  {
-    my $self = shift;
-    my $name = shift;
+    my ($self, $data) = @_;
+    my $params = $self->mapped_params($data);
 
-    $self->adapter->delete($name => @_);
+    $self->adapter->delete($data->table => $params->{where});
 }
 
 sub adapter {
@@ -61,6 +69,8 @@ sub adapter {
     $self->{adapter} = $adapter if defined $adapter;
     $self->{adapter} || die 'You must set an adapter first';
 }
+
+### PRIVATE_METHODS ###
 
 my %DATA_CLASSES = ();
 sub data_class {
@@ -70,7 +80,10 @@ sub data_class {
         my $data_class = join '::', (ref $self), 'Data', ucfirst lc $name;
 
         eval { Class::Load::load_class($data_class) };
-        $data_class = 'Data::Mapper::Data' if $@;
+
+        Carp::croak("no such data class: $data_class for $name")
+            if $@;
+
         $data_class;
     }
 }
@@ -86,11 +99,28 @@ sub map_data {
         $data = $data->as_serializable;
     }
 
-    my $schema = $self->adapter->schemata->{$name};
-    my $id     = join ';', (map { join '=', $_, $data->{$_} } @{$schema->primary_keys});
-
-    $data->{__OBJECT_ID__} = $id;
     $data_class->new($data);
+}
+
+sub mapped_params {
+    my ($self, $data) = @_;
+    my $table  = $data->table;
+    my $schema = $self->adapter->schemata->{$table}
+        or Carp::croak("no such table: $table");
+
+    my $primary_keys = $schema->primary_keys;
+    die "Data::Mapper doesn't support tables have no primary keys"
+        if !scalar @$primary_keys;
+
+    my $result = { set => $data->changes, where => {} };
+    for my $key (@$primary_keys) {
+        $result->{where}{$key} = $data->param($key);
+    }
+
+    Carp::croak("where clause is empty")
+        if !keys %{$result->{where}};
+
+    $result;
 }
 
 !!1;
@@ -121,8 +151,8 @@ PofEAA
   $data->param('name'); #=> kentaro
   $data->param('age');  #=> kentaro
 
-  # Retrieve all with some conditions
-  $result = $mapper->all(user => { age => 34 }, { order_by => 'id DESC' });
+  # Search with some conditions
+  $result = $mapper->search(user => { age => 34 }, { order_by => 'id DESC' });
 
   for my $data (@$result) {
       $data->param('name');
@@ -131,11 +161,11 @@ PofEAA
 
   # Update
   $data->param(age => 35);
-  my $sth = $mapper->update(user => $data->changes, { name => $data->param('name') });
+  my $sth = $mapper->update($data);
   $sth->rows; #=> 1
 
   # Destroy
-  my $sth = $mapper->destroy(user => { name => $data->param('name') });
+  my $sth = $mapper->delete($data);
   $sth->rows; #=> 1
 
 =head1 WARNING
@@ -159,9 +189,9 @@ implementation: Data::Mapper::Adapter::DBI.
 
 =head2 Mapper
 
-I<Mapper> makes relations between data from somewhere, typically from
-a database, to Perl's objects, and vice versa, while keeping them
-independent of each other and the mapper itself.
+I<Mapper> makes relations between data from a datasource, which is
+typically a database, to Perl's objects, and vice versa, while keeping
+them independent each other, and the mapper itself.
 
 You can use Data::Mapper directly or make your own mapper by
 inheriting it.
@@ -170,29 +200,29 @@ I<Mapper> provides the methods below:
 
 =over 4
 
-=item * create( I<$name>, I<\%values> )
+=item * create( I<$name> => I<\%values> )
 
 Creates a new data, and returns it as a I<Data> object described
 later.
 
-=item * find( I<$name>, I<\%conditions> [, I<\%options>] )
+=item * find( I<$name> => I<\%conditions> [, I<\%options>] )
 
 Searches data according to C<\%conditions> and C<\%options>, and
 returns the first one as a I<Data> object described later.
 
-=item * all( I<$name>, I<\%conditions> [, I<\%options>] )
+=item * search( I<$name>, I<\%conditions> [, I<\%options>] )
 
 Searches data according to C<\%conditions> and C<\%options>, and
 returns the all of them as an ArrayRef which contains each records as
 a I<Data> object described later.
 
-=item * update( I<$name>, I<\%values> [, I<\%conditions>] )
+=item * update( I<$data> )
 
-Updates data according to C<\%values>, and C<\%conditions>.
+Updates C<$data> in the datasource.
 
-=item * destroy( I<$name>, I<\%conditions> )
+=item * delete( I<$data> )
 
-Deletes the data specified by C<\%conditions>.
+Deletes the C<$data> from the datasource.
 
 =back
 
@@ -215,7 +245,7 @@ Creates a new data, and returns it as a specific form described later.
 Searches data according to C<\%conditions> and C<\%options>, and
 returns the first one as a specific form described later.
 
-=item * all( I<$name>, I<\%conditions> [, I<\%options>] )
+=item * search( I<$name>, I<\%conditions> [, I<\%options>] )
 
 Searches data according to C<\%conditions> and C<\%options>, and
 returns the all of them as an ArrayRef which contains each records as
@@ -226,13 +256,13 @@ the specific form same as the one C<find()> method returns.
 Updates data in a datasource according to C<\%values>, and
 C<\%conditions>.
 
-=item * destroy( I<$name>, I<\%conditions> )
+=item * delete( I<$name>, I<\%conditions> )
 
 Deletes the data specified by C<\%conditions> from a datasource.
 
 =back
 
-The return value of C<create()>, C<find()>, C<all()> is either a
+The return value of C<create()>, C<find()>, C<search()> is either a
 HashRef or an object which has C<as_serializable()> method to return
 its contents as a HashRef.
 
@@ -241,29 +271,16 @@ only you implement the methods described above.
 
 =head2 Data
 
-I<Data> represents a model where you can define some business
+I<Data> represents a data model where you can define some business
 logic. You must notice that I<Data> layer has no idea about what
 I<Mapper> and I<Adapter> are. It just hold the data passed by
 I<Mapper>
 
-I<Data> object, in fact, can be any plain hash-based object although
-this distribution provides I<Data::Mapper::Data> for
-convenience. I<Data> object must:
-
-=over 4
-
-=item Have a C<new()> method which takes a HashRef as an argument
-
-=item Be a plain hash-based object
-
-=back
-
-I<Mapper> returns data as a I<Data::Mapper::Data> object by
-default. You can define your own I<Data> object by inheriting
-I<Data::Mapper>.
+I<Mapper> returns some instance whose class inherits
+I<Data::Mapper::Data> object.
 
   package My::Mapper::Data::User;
-  use parent qw(Data::Mapper::Data); #=> It's not necessarilly required as explained above
+  use parent qw(Data::Mapper::Data);
 
   package My::Mapper;
   use parent qw(Data::Mapper);
@@ -273,17 +290,6 @@ I<Data::Mapper>.
 
   my $mapper = My::Mapper->new(...);
   $mapper->find(user => ...) #=> Now returns data as a My::Mapper::Data::User
-
-I<Data::Mapper::Data>-based object has one might-be-useful methods:
-C<is_changed()> and C<changes()>. It's so when you changed the values
-in the object and attempt to sync them into a datasource.
-
-  my $data = $mapper->find(user => { name => 'kentaro' });
-  $data->param(age => 35);
-
-  # Dispatches changing operation if data is changed
-  $data->is_changed &&
-  $mapper->update(user => $data->changes, { name => $data->param('name') });
 
 =head1 AUTHOR
 

@@ -4,9 +4,24 @@ use Test::More;
 use Test::Fatal;
 
 use Data::Mapper::Data;
+use t::lib::Data::Mapper::Data::Test;
+
+subtest 'table' => sub {
+    note 'subclassing';
+    {
+        my $data = t::lib::Data::Mapper::Data::Test->new;
+        is $data->table, 'test';
+    }
+
+    note 'direct access';
+    {
+        my $data = Data::Mapper::Data->new;
+        like exception { $data->table }, qr/^this class should be inherited by subclass/;
+    }
+};
 
 subtest 'param' => sub {
-    my $data = Data::Mapper::Data->new;
+    my $data = t::lib::Data::Mapper::Data::Test->new;
 
     note 'param() as a getter';
     ok !$data->param('foo');
@@ -26,7 +41,7 @@ subtest 'param' => sub {
 };
 
 subtest 'changes' => sub {
-    my $data = Data::Mapper::Data->new;
+    my $data = t::lib::Data::Mapper::Data::Test->new;
 
     ok !$data->is_changed;
     is_deeply $data->changed_keys, [];
