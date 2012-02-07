@@ -215,8 +215,8 @@ I<Mapper> makes relations between data from a datasource, which is
 typically a database, to Perl's objects, and vice versa, while keeping
 them independent each other, and the mapper itself.
 
-You can use Data::Mapper directly or make your own mapper by
-inheriting it.
+You can use Data::Mapper via your own mapper subclass by inheriting
+it.
 
 I<Mapper> provides the methods below:
 
