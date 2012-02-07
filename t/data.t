@@ -20,6 +20,16 @@ subtest 'table' => sub {
     }
 };
 
+subtest 'to_table_name' => sub {
+    my $data = Data::Mapper::Data->new;
+
+    is $data->to_table_name('My::Mapper::Data::Test'), 'test';
+    is $data->to_table_name('My::Mapper::Data::TestTest'), 'test_test';
+    is $data->to_table_name('My::Mapper::Data::TestTestTest'), 'test_test_test';
+    is $data->to_table_name('My::Mapper::Data::TestT'), 'test_t';
+    is $data->to_table_name('My::Mapper::Data::TestTT'), 'test_t_t';
+};
+
 subtest 'param' => sub {
     my $data = t::lib::Data::Mapper::Data::Test->new;
 

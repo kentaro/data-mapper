@@ -1,5 +1,9 @@
 Revision history for Perl extension Data::Mapper
 
+0.03    2012-02-07
+        - added detailed information into POD
+        - added support for table name concatinated by underscores
+
 0.02    2012-02-07
         - changes in data object will be discarded after updating
         - more appropriate error handling

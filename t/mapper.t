@@ -101,6 +101,15 @@ subtest 'data_class' => sub {
        qr'^no such data class: t::lib::Data::Mapper::Data::Nothing for nothing';
 };
 
+subtest 'to_class_name' => sub {
+    is $mapper->to_class_name('test'), 'Test';
+    is $mapper->to_class_name('test_test'), 'TestTest';
+    is $mapper->to_class_name('test_t'), 'TestT';
+    is $mapper->to_class_name('test_t_t'), 'TestTT';
+    is $mapper->to_class_name(''), '';
+    is $mapper->to_class_name(), undef;
+};
+
 subtest 'map_data' => sub {
     note 'when a HashRef passed';
     {

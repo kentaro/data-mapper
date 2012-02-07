@@ -12,8 +12,16 @@ sub table {
     Carp::croak('this class should be inherited by subclass')
         if $class eq __PACKAGE__;
 
+    $self->to_table_name($class);
+}
+
+sub to_table_name {
+    my ($self, $class) = @_;
     my ($table) = ($class =~ /::([^:]+)$/);
-    lc $table;
+
+    $table =~ s/([A-Z])/'_' . lc $1/eg;
+    $table =~ s/^_//;
+    $table;
 }
 
 sub param {

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Data::Mapper::Class);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Carp         ();
 use Scalar::Util ();
@@ -79,7 +79,7 @@ sub data_class {
     my ($self, $name) = @_;
 
     $DATA_CLASSES{$name} ||= do {
-        my $data_class = join '::', (ref $self), 'Data', ucfirst lc $name;
+        my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
 
         eval { Class::Load::load_class($data_class) };
 
@@ -88,6 +88,14 @@ sub data_class {
 
         $data_class;
     }
+}
+
+sub to_class_name {
+    my ($self, $name) = @_;
+    return $name if !$name;
+
+    my @parts = split /_/, $name;
+    join '', (map { ucfirst } @parts);
 }
 
 sub map_data {
@@ -138,20 +146,32 @@ PofEAA
 
 =head1 SYNOPSIS
 
-  use Data::Mapper;
+  # Your mapper class
+  package My::Mapper;
+  use parent qw(Data::Mapper);
+
+  # Your data class related to `user` table
+  package My::Mapper::Data::User;
+  use parent qw(Data::Mapper::Data);
+
+  # Then, use them
+  package main;
   use Data::Mapper::Adapter::DBI;
 
   my $dbh     = DBI->connect($dsn, $username, $password, ...);
   my $adapter = Data::Mapper::Adapter::DBI->new({ driver => $dbh });
-  my $mapper  = Data::Mapper->new({ adapter => $adapter });
+  my $mapper  = My::Mapper->new({ adapter => $adapter });
 
   # Create
   my $data = $mapper->create(user => { name => 'kentaro', age => 34 });
+  #=> is a My::Mapper::Data::User object
 
   # Retrieve just one item
   $data = $mapper->find(user => { name => 'kentaro' });
+  #=> is a My::Mapper::Data::User object
+
   $data->param('name'); #=> kentaro
-  $data->param('age');  #=> kentaro
+  $data->param('age');  #=> 34
 
   # Search with some conditions
   $result = $mapper->search(user => { age => 34 }, { order_by => 'id DESC' });
@@ -309,6 +329,10 @@ L<http://www.martinfowler.com/eaaCatalog/dataMapper.html>
 
 An existing Perl implementation of the pattern above. You might want
 to consult it if you want much more ORM-ish features.
+
+=item * L<DBI>
+
+=item * L<SQL::Maker>
 
 =back
 
