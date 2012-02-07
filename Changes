@@ -1,4 +1,8 @@
 Revision history for Perl extension Data::Mapper
 
+0.02    2012-02-07
+        - changes in data object will be discarded after updating
+        - more appropriate error handling
+
 0.01    2012-02-07
         - original version

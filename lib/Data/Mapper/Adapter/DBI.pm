@@ -4,6 +4,8 @@ use warnings;
 use parent qw(Data::Mapper::Adapter);
 
 use Carp ();
+use Data::Dumper ();
+
 use SQL::Maker;
 use DBIx::Inspector;
 
@@ -110,9 +112,32 @@ sub select {
 
 sub execute {
     my ($self, $sql, @binds) = @_;
-    my $sth = $self->driver->prepare($sql);
-       $sth->execute(@binds);
-       $sth;
+    my $sth;
+
+    eval {
+        $sth = $self->driver->prepare($sql);
+        $sth->execute(@binds);
+    };
+
+    if ($@) {
+        $self->handle_error($sql, \@binds, $@);
+    }
+
+    $sth;
+}
+
+sub handle_error {
+    my ($self, $sql, $bind, $error) = @_;
+    $sql =~ s/\n/\n          /gm;
+
+    Carp::croak sprintf <<"TRACE", $error, $sql, Data::Dumper::Dumper($bind);
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@ Data::Mapper Exception @@@@@
+Reason  : %s
+SQL     : %s
+BIND    : %s
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+TRACE
 }
 
 sub last_insert_id {

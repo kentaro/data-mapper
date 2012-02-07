@@ -64,7 +64,9 @@ subtest 'update' => sub {
     is $data->param('value'), 'test update';
     $data->param(value => 'test updated');
 
+    ok $data->is_changed;
     my $ret = $mapper->update($data);
+    ok !$data->is_changed;
 
     ok     $ret;
     isa_ok $ret, 'DBI::st';

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Data::Mapper::Class);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp         ();
 use Scalar::Util ();
@@ -52,6 +52,8 @@ sub update {
         $result = $self->adapter->update(
             $data->table => $params->{set} => $params->{where}
         );
+
+        $data->discard_changes;
     }
 
     $result;
