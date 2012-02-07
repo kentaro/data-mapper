@@ -317,6 +317,16 @@ I<Data::Mapper::Data> object.
 
 Kentaro Kuribayashi E<lt>kentarok@gmail.comE<gt>
 
+=head1 REPOSITORY
+
+=over 4
+
+=item * GitHub
+
+L<https://github.com/kentaro/data-mapper>
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
