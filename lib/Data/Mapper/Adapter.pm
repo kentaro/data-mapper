@@ -5,8 +5,22 @@ use parent qw(Data::Mapper::Class);
 
 sub driver {
     my ($self, $driver) = @_;
-    $self->{driver} = $driver if defined $driver;
-    $self->{driver} || die 'You must set a driver first';
+
+    if (defined $driver) {
+        $self->{driver} = $driver
+    }
+    else {
+        if (ref $self->{driver} eq 'CODE') {
+            $driver = $self->{driver}->();
+        }
+        else {
+            $driver = $self->{driver};
+        }
+
+        die 'You must set a driver first' if !defined $driver;
+    }
+
+    $driver;
 }
 
 sub create   { die 'create() method must be implemented by subclass'   }

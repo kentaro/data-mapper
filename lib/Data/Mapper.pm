@@ -160,6 +160,14 @@ PofEAA
 
   my $dbh     = DBI->connect($dsn, $username, $password, ...);
   my $adapter = Data::Mapper::Adapter::DBI->new({ driver => $dbh });
+
+  # You can pass coderef as a driver factory, instead:
+
+  my $handler = DBIx::Handler->new(...);
+  my $adapter = Data::Mapper::Adapter::DBI->new({
+      driver => sub { $handler->dbh }
+  });
+
   my $mapper  = My::Mapper->new({ adapter => $adapter });
 
   # Create

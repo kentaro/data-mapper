@@ -8,8 +8,14 @@ use Data::Mapper::Adapter;
 subtest 'driver' => sub {
     my $adapter = Data::Mapper::Adapter->new;
     ok exception { $adapter->driver };
+
     $adapter->driver('some driver implementation');
     ok !exception { $adapter->driver };
+
+    my $i = 0;
+    $adapter->driver(sub { ++$i });
+    is $adapter->driver, 1;
+    is $adapter->driver, 2;
 };
 
 package t::Data::Mapper::Adapter;
