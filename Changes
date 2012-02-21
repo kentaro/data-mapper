@@ -1,5 +1,8 @@
 Revision history for Perl extension Data::Mapper
 
+0.05    2012-02-21
+        - fixed a bug: data_class now caches class name by full-qualified one
+
 0.04    2012-02-14
         - adapter now takes also coderef as a driver factory
 

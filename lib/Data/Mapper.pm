@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Data::Mapper::Class);
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Carp         ();
 use Scalar::Util ();
@@ -77,15 +77,11 @@ sub adapter {
 my %DATA_CLASSES = ();
 sub data_class {
     my ($self, $name) = @_;
+    my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
 
-    $DATA_CLASSES{$name} ||= do {
-        my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
-
+    $DATA_CLASSES{$data_class} ||= do {
         eval { Class::Load::load_class($data_class) };
-
-        Carp::croak("no such data class: $data_class for $name")
-            if $@;
-
+        Carp::croak("no such data class: $data_class for $name") if $@;
         $data_class;
     }
 }
