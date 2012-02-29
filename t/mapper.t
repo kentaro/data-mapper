@@ -119,6 +119,14 @@ subtest 'to_class_name' => sub {
     is $mapper->to_class_name(), undef;
 };
 
+subtest 'to_table_name' => sub {
+    is $mapper->to_table_name(bless {}, 'My::Mapper::Data::Test'), 'test';
+    is $mapper->to_table_name(bless {}, 'My::Mapper::Data::TestTest'), 'test_test';
+    is $mapper->to_table_name(bless {}, 'My::Mapper::Data::TestTestTest'), 'test_test_test';
+    is $mapper->to_table_name(bless {}, 'My::Mapper::Data::TestT'), 'test_t';
+    is $mapper->to_table_name(bless {}, 'My::Mapper::Data::TestTT'), 'test_t_t';
+};
+
 subtest 'map_data' => sub {
     note 'when a HashRef passed';
     {
@@ -155,6 +163,7 @@ subtest 'mapped_params' => sub {
     is_deeply $params, +{
         set   => { value => 'changed'          },
         where => { id    => $data->param('id') },
+        table => 'test',
     };
 };
 

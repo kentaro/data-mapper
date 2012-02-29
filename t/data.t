@@ -7,6 +7,8 @@ use Data::Mapper::Data;
 use t::lib::Data::Mapper::Data::Test;
 
 subtest 'table' => sub {
+    plan skip_all => 'removed $data->table()';
+
     note 'subclassing';
     {
         my $data = t::lib::Data::Mapper::Data::Test->new;
@@ -18,16 +20,6 @@ subtest 'table' => sub {
         my $data = Data::Mapper::Data->new;
         like exception { $data->table }, qr/^this class should be inherited by subclass/;
     }
-};
-
-subtest 'to_table_name' => sub {
-    my $data = Data::Mapper::Data->new;
-
-    is $data->to_table_name('My::Mapper::Data::Test'), 'test';
-    is $data->to_table_name('My::Mapper::Data::TestTest'), 'test_test';
-    is $data->to_table_name('My::Mapper::Data::TestTestTest'), 'test_test_test';
-    is $data->to_table_name('My::Mapper::Data::TestT'), 'test_t';
-    is $data->to_table_name('My::Mapper::Data::TestTT'), 'test_t_t';
 };
 
 subtest 'param' => sub {

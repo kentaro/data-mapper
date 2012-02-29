@@ -50,7 +50,7 @@ sub update {
         my $params = $self->mapped_params($data);
 
         $result = $self->adapter->update(
-            $data->table => $params->{set} => $params->{where}
+            $params->{table} => $params->{set} => $params->{where}
         );
 
         $data->discard_changes;
@@ -62,8 +62,7 @@ sub update {
 sub delete  {
     my ($self, $data) = @_;
     my $params = $self->mapped_params($data);
-
-    $self->adapter->delete($data->table => $params->{where});
+    $self->adapter->delete($params->{table} => $params->{where});
 }
 
 sub adapter {
@@ -94,6 +93,15 @@ sub to_class_name {
     join '', (map { ucfirst } @parts);
 }
 
+sub to_table_name {
+    my ($self, $data) = @_;
+    my ($table) = ((ref $data) =~ /::([^:]+)$/);
+
+    $table =~ s/([A-Z])/'_' . lc $1/eg;
+    $table =~ s/^_//;
+    $table;
+}
+
 sub map_data {
     my ($self, $name, $data) = @_;
     my $data_class = $self->data_class($name);
@@ -110,7 +118,7 @@ sub map_data {
 
 sub mapped_params {
     my ($self, $data) = @_;
-    my $table  = $data->table;
+    my $table  = $self->to_table_name($data);
     my $schema = $self->adapter->schemata->{$table}
         or Carp::croak("no such table: $table");
 
@@ -118,7 +126,7 @@ sub mapped_params {
     die "Data::Mapper doesn't support tables have no primary keys"
         if !scalar @$primary_keys;
 
-    my $result = { set => $data->changes, where => {} };
+    my $result = { set => $data->changes, where => {}, table => $table };
     for my $key (@$primary_keys) {
         $result->{where}{$key} = $data->param($key);
     }

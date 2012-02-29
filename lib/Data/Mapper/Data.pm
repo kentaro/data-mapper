@@ -5,25 +5,6 @@ use parent qw(Data::Mapper::Class);
 
 use Carp ();
 
-sub table {
-    my $self  = shift;
-    my $class = ref $self;
-
-    Carp::croak('this class should be inherited by subclass')
-        if $class eq __PACKAGE__;
-
-    $self->to_table_name($class);
-}
-
-sub to_table_name {
-    my ($self, $class) = @_;
-    my ($table) = ($class =~ /::([^:]+)$/);
-
-    $table =~ s/([A-Z])/'_' . lc $1/eg;
-    $table =~ s/^_//;
-    $table;
-}
-
 sub param {
     my $self = shift;
     return keys %$self if !@_;
