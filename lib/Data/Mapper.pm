@@ -74,12 +74,12 @@ sub adapter {
 
 ### PRIVATE_METHODS ###
 
-my %DATA_CLASSES = ();
+our %DATA_CLASSES = ();
 sub data_class {
     my ($self, $name) = @_;
-    my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
 
-    $DATA_CLASSES{$data_class} ||= do {
+    $DATA_CLASSES{ref $self}{$name} ||= do {
+        my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
         eval { Class::Load::load_class($data_class) };
         Carp::croak("no such data class: $data_class for $name") if $@;
         $data_class;

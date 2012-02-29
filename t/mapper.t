@@ -5,6 +5,7 @@ use Test::More;
 use Test::Fatal;
 
 use t::lib::Data::Mapper;
+use t::lib::Another::Mapper;
 use Data::Mapper::Adapter::DBI;
 
 my $dbh = t::lib::Utils::dbh;
@@ -12,6 +13,7 @@ my $dbh = t::lib::Utils::dbh;
 
 my $adapter = Data::Mapper::Adapter::DBI->new({ driver => $dbh });
 my $mapper  = t::lib::Data::Mapper->new({ adapter => $adapter });
+my $another = t::lib::Another::Mapper->new({ adapter => $adapter });
 
 subtest 'create' => sub {
     my $data = $mapper->create(test => { value => 'test create' });
@@ -99,6 +101,13 @@ subtest 'data_class' => sub {
     is $class, 't::lib::Data::Mapper::Data::Test';
     like exception { $mapper->data_class('nothing') },
        qr'^no such data class: t::lib::Data::Mapper::Data::Nothing for nothing';
+
+    is $another->data_class('test'), 't::lib::Another::Mapper::Data::Test', 'same $name but different namespace';
+
+    subtest '%Data::Mapper::DATA_CLASSES' => sub {
+        local $Data::Mapper::DATA_CLASSES{'t::lib::Another::Mapper'}{nothing} = 'Foo';
+        is $another->data_class('nothing'), 'Foo';
+    };
 };
 
 subtest 'to_class_name' => sub {
