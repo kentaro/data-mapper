@@ -9,6 +9,4 @@ sub new {
     bless $args || {}, $class;
 }
 
-sub as_serializable { +{ %{$_[0]} } }
-
 !!1;

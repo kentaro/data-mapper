@@ -137,17 +137,25 @@ subtest 'map_data' => sub {
         is     $data->param('foo'), 'test';
     }
 
-    note 'croaks when an normal object passed';
+    note 'when normal blessed-hashref object passed';
     {
-        like exception { $mapper->map_data(test => (bless {}, 't::Dummy')) },
+        my $data = $mapper->map_data(test => bless { foo => 'test' }, 't::Dummy');
+
+        ok     $data;
+        isa_ok $data, 't::lib::Data::Mapper::Data::Test';
+        is     $data->param('foo'), 'test';
+    }
+
+    note 'croaks when no-hashref object passed';
+    {
+        like exception { $mapper->map_data(test => (bless [], 't::Dummy')) },
              qr/^blessed data/;
     }
 
     note 'but not croaks if the object has as_serializable() method';
     {
-        my $data = $mapper->map_data(test => Data::Mapper::Class->new({
-            foo => 'test'
-        }));
+        require t::lib::Class::Array;
+        my $data = $mapper->map_data(test => t::lib::Class::Array->new(foo => 'test'));
 
         ok     $data;
         isa_ok $data, 't::lib::Data::Mapper::Data::Test';

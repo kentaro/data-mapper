@@ -102,15 +102,23 @@ sub to_table_name {
     $table;
 }
 
+sub as_serializable {
+    my ($self, $data) = @_;
+    +{ %$data };
+}
+
 sub map_data {
     my ($self, $name, $data) = @_;
     my $data_class = $self->data_class($name);
 
     if (Scalar::Util::blessed($data)) {
-        Carp::croak('blessed data must have as_serializable method')
-            if !$data->can('as_serializable');
-
-        $data = $data->as_serializable;
+        if ($data->can('as_serializable')) {
+            $data = $data->as_serializable;
+        } elsif (Scalar::Util::reftype($data) eq 'HASH') {
+            $data = $self->as_serializable($data);
+        } else {
+            Carp::croak('blessed data must be blessed hashref or have as_serializable method');
+        }
     }
 
     $data_class->new($data);
