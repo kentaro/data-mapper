@@ -45,16 +45,16 @@ sub search {
 sub update {
     my ($self, $data) = @_;
     my $result;
+    my $has_changes = $data->isa('Data::Mapper::Data');
 
-    if ($data->is_changed) {
-        my $params = $self->mapped_params($data);
+    return if $has_changes && not $data->is_changed;
 
-        $result = $self->adapter->update(
-            $params->{table} => $params->{set} => $params->{where}
-        );
+    my $params = $self->mapped_params($data);
+    $result = $self->adapter->update(
+        $params->{table} => $params->{set} => $params->{where}
+    );
 
-        $data->discard_changes;
-    }
+    $data->discard_changes if $has_changes;
 
     $result;
 }
@@ -136,9 +136,18 @@ sub mapped_params {
     die "Data::Mapper doesn't support tables have no primary keys"
         if !scalar @$primary_keys;
 
-    my $result = { set => $data->changes, where => {}, table => $table };
-    for my $key (@$primary_keys) {
-        $result->{where}{$key} = $data->param($key);
+    my $result = { set => {}, where => {}, table => $table };
+    
+    if ($data->isa('Data::Mapper::Data')) {
+        $result->{set} = $data->changes;
+        for my $key (@$primary_keys) {
+            $result->{where}{$key} = $data->param($key);
+        }
+    } else {
+        $result->{set} = $self->as_serializable($data); # everything
+        for my $key (@$primary_keys) {
+            $result->{where}{$key} = $data->{$key};
+        }
     }
 
     Carp::croak("where clause is empty")
