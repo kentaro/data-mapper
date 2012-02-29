@@ -104,7 +104,9 @@ sub to_table_name {
 
 sub as_serializable {
     my ($self, $data) = @_;
-    +{ %$data };
+    +{
+        map { $_ => $data->{$_} } grep { !/^_/ } keys %$data
+    };
 }
 
 sub map_data {

@@ -171,4 +171,12 @@ subtest 'mapped_params' => sub {
     };
 };
 
+subtest 'as_serializable' => sub {
+    my $data = $mapper->as_serializable({ one => 'uno', two => 'due', _private => 'secret' });
+    is_deeply $data, +{
+        one => 'uno',
+        two => 'due',
+    };
+};
+
 done_testing;
