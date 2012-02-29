@@ -128,39 +128,35 @@ subtest 'to_table_name' => sub {
 };
 
 subtest 'map_data' => sub {
-    note 'when a HashRef passed';
-    {
+    subtest 'when a HashRef passed' => sub {
         my $data = $mapper->map_data(test => { foo => 'test' });
 
         ok     $data;
         isa_ok $data, 't::lib::Data::Mapper::Data::Test';
         is     $data->param('foo'), 'test';
-    }
+    };
 
-    note 'when normal blessed-hashref object passed';
-    {
+    subtest 'when normal blessed-hashref object passed' => sub {
         my $data = $mapper->map_data(test => bless { foo => 'test' }, 't::Dummy');
 
         ok     $data;
         isa_ok $data, 't::lib::Data::Mapper::Data::Test';
         is     $data->param('foo'), 'test';
-    }
+    };
 
-    note 'croaks when no-hashref object passed';
-    {
+    subtest 'croaks when no-hashref object passed' => sub {
         like exception { $mapper->map_data(test => (bless [], 't::Dummy')) },
              qr/^blessed data/;
-    }
+    };
 
-    note 'but not croaks if the object has as_serializable() method';
-    {
+    subtest 'but not croaks if the object has as_serializable() method' => sub {
         require t::lib::Class::Array;
         my $data = $mapper->map_data(test => t::lib::Class::Array->new(foo => 'test'));
 
         ok     $data;
         isa_ok $data, 't::lib::Data::Mapper::Data::Test';
         is     $data->param('foo'), 'test';
-    }
+    };
 };
 
 subtest 'mapped_params' => sub {
