@@ -146,7 +146,7 @@ subtest 'map_data' => sub {
 
     subtest 'croaks when no-hashref object passed' => sub {
         like exception { $mapper->map_data(test => (bless [], 't::Dummy')) },
-             qr/^blessed data/;
+             qr/^\$data must be either/;
     };
 
     subtest 'but not croaks if the object has as_serializable() method' => sub {

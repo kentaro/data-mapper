@@ -71,19 +71,21 @@ sub adapter {
     $self->{adapter} || die 'You must set an adapter first';
 }
 
-### PRIVATE_METHODS ###
-
 our %DATA_CLASSES = ();
 sub data_class {
     my ($self, $name) = @_;
 
     $DATA_CLASSES{ref $self}{$name} ||= do {
         my $data_class = join '::', (ref $self), 'Data', $self->to_class_name($name);
+
         eval { Class::Load::load_class($data_class) };
         Carp::croak("no such data class: $data_class for $name") if $@;
+
         $data_class;
     }
 }
+
+### PRIVATE_METHODS ###
 
 sub to_class_name {
     my ($self, $name) = @_;
@@ -116,10 +118,12 @@ sub map_data {
     if (Scalar::Util::blessed($data)) {
         if ($data->can('as_serializable')) {
             $data = $data->as_serializable;
-        } elsif (Scalar::Util::reftype($data) eq 'HASH') {
+        }
+        elsif (Scalar::Util::reftype($data) eq 'HASH') {
             $data = $self->as_serializable($data);
-        } else {
-            Carp::croak('blessed data must be blessed hashref or have as_serializable method');
+        }
+        else {
+            Carp::croak('$data must be either a Hash-based object or a plain HashRef');
         }
     }
 
@@ -133,18 +137,24 @@ sub mapped_params {
         or Carp::croak("no such table: $table");
 
     my $primary_keys = $schema->primary_keys;
-    die "Data::Mapper doesn't support tables have no primary keys"
+    die "Data::Mapper doesn't support tables which have no primary keys"
         if !scalar @$primary_keys;
 
     my $result = { set => {}, where => {}, table => $table };
-    
+
+    # Data::Mapper::Data-based object
     if ($data->isa('Data::Mapper::Data')) {
         $result->{set} = $data->changes;
+
         for my $key (@$primary_keys) {
             $result->{where}{$key} = $data->param($key);
         }
-    } else {
-        $result->{set} = $self->as_serializable($data); # everything
+    }
+
+    # Hash-based POPO
+    else {
+        $result->{set} = $self->as_serializable($data);
+
         for my $key (@$primary_keys) {
             $result->{where}{$key} = $data->{$key};
         }
@@ -282,8 +292,8 @@ Deletes the C<$data> from the datasource.
 =head2 Adapter
 
 I<Adapter> does CRUD operations against a datasource (database,
-memcached, etc.). It must implement some methods according to the
-convention.
+memcached, external API, etc.). It must implement some methods
+according to the convention.
 
 I<Adapter> must implements the methods below:
 
@@ -315,9 +325,10 @@ Deletes the data specified by C<\%conditions> from a datasource.
 
 =back
 
-The return value of C<create()>, C<find()>, C<search()> is either a
-HashRef or an object which has C<as_serializable()> method to return
-its contents as a HashRef.
+The return value of C<create()>, C<find()>, C<search()> must be either
+a plain HashRef or a Hash-based object. If the object has
+C<as_serializable()>, it'll be called before mapping to extract data
+as a HashRef.
 
 You can adapt any data-retrieving module to Data::Model convention if
 only you implement the methods described above.
@@ -326,14 +337,22 @@ only you implement the methods described above.
 
 I<Data> represents a data model where you can define some business
 logic. You must notice that I<Data> layer has no idea about what
-I<Mapper> and I<Adapter> are. It just hold the data passed by
+I<Mapper> and I<Adapter> are. It just holds the data passed by
 I<Mapper>
 
-I<Mapper> returns some instance whose class inherits
-I<Data::Mapper::Data> object.
+I<Data> can be either I<Data::Mapper::Data>-based object or your own
+POPO.
 
+  # Data::Mapper::Data-based class
   package My::Mapper::Data::User;
   use parent qw(Data::Mapper::Data);
+
+  # Or, Hash-based POPO
+  package My::Mapper::Data::User;
+  sub new {
+      my ($class, %args) = @_;
+      bless \%args, $class;
+  }
 
   package My::Mapper;
   use parent qw(Data::Mapper);
@@ -343,6 +362,11 @@ I<Data::Mapper::Data> object.
 
   my $mapper = My::Mapper->new(...);
   $mapper->find(user => ...) #=> Now returns data as a My::Mapper::Data::User
+
+What data class will be used is determined by
+C<Data::Mapper#data_class> method. In default, data class will be
+C<Your::Mapper::Data::$table> as shown above. You can customize the
+behaviour by overriding the method.
 
 =head1 AUTHOR
 
