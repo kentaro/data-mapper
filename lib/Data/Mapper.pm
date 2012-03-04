@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use parent qw(Data::Mapper::Class);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Carp         ();
 use Scalar::Util ();

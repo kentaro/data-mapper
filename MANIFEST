@@ -15,10 +15,15 @@ t/adapter.t
 t/adapter_dbi.t
 t/compile.t
 t/data.t
+t/lib/Another/Mapper.pm
+t/lib/Another/Mapper/Data/Test.pm
+t/lib/Class/Array.pm
 t/lib/Data/Mapper.pm
 t/lib/Data/Mapper/Data.pm
+t/lib/Data/Mapper/Data/Popo.pm
 t/lib/Data/Mapper/Data/Test.pm
 t/lib/Utils.pm
+t/mapper-popo.t
 t/mapper.t
 xt/01_podspell.t
 xt/02_perlcritic.t
